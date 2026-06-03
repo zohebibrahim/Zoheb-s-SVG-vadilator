@@ -16,7 +16,7 @@ function validateSVG (svgString) {
   const errors = []
   const parser = new DOMParser({
     errorHandler: {
-      error: () => {}, // Negeer milde XML waarschuwingen voor een soepelere ervaring
+      error: () => {}, // Negeer milde XML waarschuwingen
       fatalError: (msg) => errors.push({ message: `XML Structuur Fout: ${msg}` })
     }
   })
@@ -26,19 +26,17 @@ function validateSVG (svgString) {
 
   const root = doc.documentElement
   
-  // US-02: Hoofdtag controle
+
   if (!root || root.tagName !== 'svg') {
     errors.push({ message: 'Het bestand is geen geldige SVG (hoofdtag mist).', selector: 'svg' })
     return { valid: false, errors }
   }
 
-  // US-02: Klasse "installation" aanwezigheid
+//Klasse "installation" aanwezigheid
   if (root.getAttribute('class') !== 'installation') {
     errors.push({ message: `De hoofd <svg> tag mist de verplichte klasse "installation".${getLine(root)}`, selector: 'svg' })
   }
-
-  // US-02: Controleer of <style>, <defs> en <g> AANWEZIG zijn direct onder de root
-  const rootChildren = Array.from(root.childNodes).filter(n => n.nodeType === 1)
+ const rootChildren = Array.from(root.childNodes).filter(n => n.nodeType === 1)
   const styleNode = rootChildren.find(n => n.tagName === 'style')
   const defsNode = rootChildren.find(n => n.tagName === 'defs')
   const mainGNode = rootChildren.find(n => n.tagName === 'g' && n.getAttribute('class') !== 'click-area')
@@ -72,7 +70,7 @@ function validateSVG (svgString) {
     }
   }
 
-  // --- DEFS & SYMBOL VALIDATIE ---
+  //defs en symbol validatie
   if (defsNode) {
     const symbols = Array.from(defsNode.childNodes).filter(n => n.nodeType === 1 && n.tagName === 'symbol')
     
@@ -82,7 +80,7 @@ function validateSVG (svgString) {
 
       const symbolChildren = Array.from(symbol.childNodes).filter(n => n.nodeType === 1)
       
-      // Check: bevat <g class="installation_section">
+      //  bevat <g class="installation_section">
       const hasInstSection = symbolChildren.some(n => n.tagName === 'g' && n.getAttribute('class') === 'installation_section')
       if (!hasInstSection) {
         errors.push({ 
@@ -91,7 +89,7 @@ function validateSVG (svgString) {
         })
       }
 
-      // Check: bevat de transparante click-area ergens binnen het symbool
+      //  bevat de transparante click-area ergens binnen het symbool
       const allSymbolElements = Array.from(symbol.getElementsByTagName('*'))
       const hasClickArea = typeof allSymbolElements.find(el => 
         ['g', 'path', 'rect', 'circle'].includes(el.tagName) && 
@@ -108,7 +106,7 @@ function validateSVG (svgString) {
     })
   }
 
-  // --- HOOFD <g> VALIDATIE ---
+  // hoofd g validatie
   if (mainGNode) {
     const mainGChildren = Array.from(mainGNode.childNodes).filter(n => n.nodeType === 1)
     
@@ -150,7 +148,7 @@ function validateSVG (svgString) {
         }
       }
 
-      // US-05: Check of gebruikte klassen op de hoofdcomponenten in de <style> staan
+      // checkt of gebruikte klassen op de hoofdcomponenten in de <style> staan
       const classes = Array.from(child.classList || [])
       classes.forEach(className => {
         if (!definedCssClasses.has(className) && className !== 'click-area' && className !== 'installation_section') {
