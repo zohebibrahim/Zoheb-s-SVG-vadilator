@@ -107,3 +107,73 @@ function validateSVG (svgString) {
       }
     })
   }
+
+  // --- HOOFD <g> VALIDATIE ---
+  if (mainGNode) {
+    const mainGChildren = Array.from(mainGNode.childNodes).filter(n => n.nodeType === 1)
+    
+    mainGChildren.forEach((child, index) => {
+      const selector = `svg > g > :nth-child(${index + 1})`
+      
+      // Toegestane tags controleren direct onder de hoofd-g
+      if (!['use', 'text', 'g'].includes(child.tagName)) {
+        errors.push({ message: `Tag '${child.tagName}' is niet toegestaan direct onder de hoofdgroep <g>. Verpak deze eventueel in een subgroep <g class="click-area">.${getLine(child)}`, selector })
+        return
+      }
+
+      // <use> tag checks
+      if (child.tagName === 'use') {
+        const href = child.getAttribute('xlink:href') || child.getAttribute('href') || ''
+        const targetId = href.replace('#', '')
+        if (!href) {
+          errors.push({ message: `<use> tag mist een verwijzing (href).${getLine(child)}`, selector })
+        } else if (!definedSymbolIds.includes(targetId)) {
+          errors.push({ message: `<use> verwijst naar '#${targetId}', maar dit ID bestaat niet in de <defs>.${getLine(child)}`, selector })
+        }
+      }
+
+      // <text> tag checks
+      if (child.tagName === 'text') {
+        if (!child.getAttribute('style')) {
+          errors.push({ message: `<text> tag mist een 'style' attribuut.${getLine(child)}`, selector })
+        }
+        const tspan = Array.from(child.childNodes).find(n => n.tagName === 'tspan')
+        if (!tspan) {
+          errors.push({ message: `<text> tag moet een <tspan> subtag bevatten.${getLine(child)}`, selector })
+        }
+      }
+
+      // Sub-g checks
+      if (child.tagName === 'g') {
+        if (child.getAttribute('class') !== 'click-area') {
+          errors.push({ message: `Sub-groep <g> onder de hoofdgroep moet de klasse "click-area" bevatten.${getLine(child)}`, selector })
+        }
+      }
+
+      // US-05: Check of gebruikte klassen op de hoofdcomponenten in de <style> staan
+      const classes = Array.from(child.classList || [])
+      classes.forEach(className => {
+        if (!definedCssClasses.has(className) && className !== 'click-area' && className !== 'installation_section') {
+          errors.push({
+            message: `Klasse "${className}" is gebruikt maar ontbreekt in de <style> tag.`,
+            selector
+          })
+        }
+      })
+    })
+  }
+
+  return { valid: errors.length === 0, errors }
+}
+
+app.post('/api/validate', upload.single('svgfile'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ valid: false, errors: [{ message: 'Geen bestand gevonden.' }] })
+  }
+  const svgString = req.file.buffer.toString('utf8')
+  const result = validateSVG(svgString)
+  res.json({ ...result, svgRaw: svgString })
+})
+
+const PORT = 3000
+app.listen(PORT, () => console.log(`Server draait op http://localhost:${PORT}`))
