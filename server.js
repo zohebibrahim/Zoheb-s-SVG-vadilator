@@ -25,4 +25,7 @@ function validateSVG (svgString) {
   if (errors.length > 0) return { valid: false, errors }
 
   const root = doc.documentElement
+
+
+  12323123
   
