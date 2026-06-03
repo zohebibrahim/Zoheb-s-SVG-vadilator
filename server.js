@@ -50,3 +50,60 @@ function validateSVG (svgString) {
   const definedSymbolIds = []
   const definedCssClasses = new Set()
 
+  // CSS Parser: Verzamel gedefinieerde klassen uit <style>
+  if (styleNode) {
+    try {
+      const styleContent = styleNode.textContent || ''
+      const ast = css.parse(styleContent)
+      if (ast.stylesheet && ast.stylesheet.rules) {
+        ast.stylesheet.rules.forEach(rule => {
+          if (rule.selectors) {
+            rule.selectors.forEach(sel => {
+              const matches = sel.match(/\.([a-zA-Z0-9_-]+)/g)
+              if (matches) {
+                matches.forEach(m => definedCssClasses.add(m.replace('.', '')))
+              }
+            })
+          }
+        })
+      }
+    } catch (e) {
+      errors.push({ message: 'De <style> tag bevat CSS die niet correct gelezen kan worden.', selector: 'style' })
+    }
+  }
+
+  // --- DEFS & SYMBOL VALIDATIE ---
+  if (defsNode) {
+    const symbols = Array.from(defsNode.childNodes).filter(n => n.nodeType === 1 && n.tagName === 'symbol')
+    
+    symbols.forEach((symbol) => {
+      const id = symbol.getAttribute('id')
+      if (id) definedSymbolIds.push(id)
+
+      const symbolChildren = Array.from(symbol.childNodes).filter(n => n.nodeType === 1)
+      
+      // Check: bevat <g class="installation_section">
+      const hasInstSection = symbolChildren.some(n => n.tagName === 'g' && n.getAttribute('class') === 'installation_section')
+      if (!hasInstSection) {
+        errors.push({ 
+          message: `Symbool "${id || 'onbekend'}" moet een <g> groep bevatten met de klasse "installation_section".`, 
+          selector: id ? `svg > g > use[href="#${id}"], use[*|href="#${id}"]` : 'defs'
+        })
+      }
+
+      // Check: bevat de transparante click-area ergens binnen het symbool
+      const allSymbolElements = Array.from(symbol.getElementsByTagName('*'))
+      const hasClickArea = typeof allSymbolElements.find(el => 
+        ['g', 'path', 'rect', 'circle'].includes(el.tagName) && 
+        el.getAttribute('class') === 'click-area' && 
+        (el.getAttribute('fill') === 'transparent' || el.getAttribute('opacity') === '0')
+      ) !== 'undefined'
+
+      if (!hasClickArea) {
+        errors.push({ 
+          message: `Symbool "${id || 'onbekend'}" mist een interactief element met klasse "click-area" en fill="transparent".`, 
+          selector: id ? `svg > g > use[href="#${id}"], use[*|href="#${id}"]` : 'defs'
+        })
+      }
+    })
+  }
