@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>Svg testl</title>
+
+</head>
+<body>
+    <h2>Upload test</h2>
+    
+    <form id="uploadForm">
+        <input type="file" name="svgfile" accept=".svg" required>
+        <button type="submit">upload</button>
+    </form>
+
+    <h3>Resultaat</h3>
+    <pre id="output">Nog geen bestand verzonden</pre>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const output = document.getElementById('output');
+            output.innerText = "Bezig met valideren...";
+
+            const formData = new FormData(e.target);
+
+            try {
+               // Stuur het bestand naar de server voor validatie
+                const response = await fetch('http://localhost:3000/api/validate', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                output.innerHTML = JSON.stringify(data, null, 2);
+                
+                if (data.valid) {
+                    output.innerHTML += '<br><br><span class="success">✓ Server zegt: SVG is GELDIG!</span>';
+                } else {
+                    output.innerHTML += '<br><br><span class="error">✗ Server zegt: SVG is ONGELDIG!</span>';
+                }
+            } catch (err) {
+                output.className = 'error';
+                output.innerText = "Fout bij verbinden met de server: " + err.message;
+            }
+        });
+    </script>
+</body>
+</html>
