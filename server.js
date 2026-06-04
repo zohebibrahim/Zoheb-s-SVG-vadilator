@@ -176,4 +176,4 @@ app.post('/api/validate', upload.single('svgfile'), (req, res) => {
 })
 
 const PORT = 3000
-app.listen(PORT, () => console.log(`Server draait op http://localhost:${PORT}`))
+app.listen(PORT, () => console.log(`Server draait op http://localhost:${PORT}`))  

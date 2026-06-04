@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const GELDIG_WACHTWOORD = 'zoheb'
 
   // als de inloggegevens kloppen dan word de vadilator pagina getoond
-  loginForm.addEventListener('submit', (e) => {
+    loginForm.addEventListener('submit', (e) => {
     e.preventDefault()
     
     const usernameInput = document.getElementById('username').value.trim()
@@ -39,7 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       loginError.textContent = 'Onjuiste gebruikersnaam of wachtwoord.'
     }
-  })  
+  })
+  
 
   // drag & drop functionaliteit voor het uploaden van SVG bestanden, en ook een click event voor het selecteren van bestanden via de file input
   ;['dragenter', 'dragover'].forEach(eventName => {
@@ -97,3 +98,161 @@ document.addEventListener('DOMContentLoaded', () => {
       statusBadge.textContent = 'Fout bij verbinden'
     })
   }
+
+  function buildTree (xmlNode, container) {
+    if (xmlNode.nodeType !== 1) return
+
+    const children = Array.from(xmlNode.childNodes).filter(n => n.nodeType === 1)
+    const hasChildren = children.length > 0
+
+    let nodeText = `&lt;${xmlNode.tagName}`
+    if (xmlNode.hasAttribute('id')) {
+      nodeText += ` <span class="tree-attr">id="${xmlNode.getAttribute('id')}"</span>`
+    }
+    if (xmlNode.hasAttribute('class')) {
+      nodeText += ` <span class="tree-attr">class="${xmlNode.getAttribute('class')}"</span>`
+    }
+    nodeText += `&gt;`
+
+    if (hasChildren) {
+      const detailsEl = document.createElement('details')
+      detailsEl.open = true 
+
+      const summaryEl = document.createElement('summary')
+      summaryEl.innerHTML = nodeText
+      detailsEl.appendChild(summaryEl)
+
+      container.appendChild(detailsEl)
+      children.forEach(child => buildTree(child, detailsEl))
+    } else {
+      const leafDiv = document.createElement('div')
+      leafDiv.className = 'tree-leaf'
+      leafDiv.innerHTML = nodeText
+      container.appendChild(leafDiv)
+    }
+  }
+
+  function renderResult (data) {
+    prompt.style.display = 'none'
+    svgPreview.style.display = 'flex'
+    svgPreview.innerHTML = data.svgRaw
+
+    const svgElement = svgPreview.querySelector('svg')
+    let componentCount = 0
+
+    if (svgElement) {
+      buildTree(svgElement, componentTree)
+      componentCount = svgElement.querySelectorAll('*').length + 1
+    }
+
+    if (data.valid) {
+      appContainer.classList.add('state-success')
+      statusBadge.textContent = `Geslaagd | ${componentCount} Componenten`
+      errorList.innerHTML = '<div style="color: var(--success); text-align: center; margin-top: 2rem; font-weight:600;">✓ SVG is succesvol gevalideerd!</div>'
+    } else {
+      appContainer.classList.add('state-failed')
+      statusBadge.textContent = `${data.errors.length} Fout(en) | ${componentCount} Componenten`
+
+      data.errors.forEach(err => {
+        const item = document.createElement('div')
+        item.className = 'error-item'
+        item.innerHTML = `<div class="message">${err.message}</div>`
+
+        if (err.selector) {
+          item.addEventListener('click', () => {
+            svgPreview.querySelectorAll('.neon-glow-active').forEach(el => {
+              el.classList.remove('neon-glow-active')
+            })
+
+            const targetEl = svgPreview.querySelector(err.selector)
+            if (targetEl) {
+              targetEl.classList.add('neon-glow-active')
+            }
+          })
+        }
+        errorList.appendChild(item)
+      })
+    }
+  }
+
+   // functie die de van XML boomstructuur opbouwt van de svg elementen, en deze weergeeft in de component tree aan de zijkant van de pagina 
+
+  function buildTree (xmlNode, container) {
+    if (xmlNode.nodeType !== 1) return
+
+    const children = Array.from(xmlNode.childNodes).filter(n => n.nodeType === 1)
+    const hasChildren = children.length > 0
+
+    let nodeText = `&lt;${xmlNode.tagName}`
+    if (xmlNode.hasAttribute('id')) {
+      nodeText += ` <span class="tree-attr">id="${xmlNode.getAttribute('id')}"</span>`
+    }
+    if (xmlNode.hasAttribute('class')) {
+      nodeText += ` <span class="tree-attr">class="${xmlNode.getAttribute('class')}"</span>`
+    }
+    nodeText += `&gt;`
+
+    if (hasChildren) {
+      const detailsEl = document.createElement('details')
+      detailsEl.open = true 
+
+      const summaryEl = document.createElement('summary')
+      summaryEl.innerHTML = nodeText
+      detailsEl.appendChild(summaryEl)
+
+      container.appendChild(detailsEl)
+      children.forEach(child => buildTree(child, detailsEl))
+    } else {
+      const leafDiv = document.createElement('div')
+      leafDiv.className = 'tree-leaf'
+      leafDiv.innerHTML = nodeText
+      container.appendChild(leafDiv)
+    }
+  }
+
+  function renderResult (data) {
+    prompt.style.display = 'none'
+    svgPreview.style.display = 'flex'
+    svgPreview.innerHTML = data.svgRaw
+
+    const svgElement = svgPreview.querySelector('svg')
+    let componentCount = 0
+
+    if (svgElement) {
+      buildTree(svgElement, componentTree)
+      componentCount = svgElement.querySelectorAll('*').length + 1
+    }
+
+    // het weergeven van de resultaten van de validatie, en het toevoegen van een click event aan elke
+    // foutmelding zodat de gebruiker direct naar het element in de svg kan springen waar de fout zich bevindt
+
+    if (data.valid) {
+      appContainer.classList.add('state-success')
+      statusBadge.textContent = `Geslaagd | ${componentCount} Componenten`
+      errorList.innerHTML = '<div style="color: var(--success); text-align: center; margin-top: 2rem; font-weight:600;">✓ SVG is succesvol gevalideerd!</div>'
+    } else {
+      appContainer.classList.add('state-failed')
+      statusBadge.textContent = `${data.errors.length} Fout(en) | ${componentCount} Componenten`
+
+      data.errors.forEach(err => {
+        const item = document.createElement('div')
+        item.className = 'error-item'
+        item.innerHTML = `<div class="message">${err.message}</div>`
+
+        if (err.selector) {
+          item.addEventListener('click', () => {
+            svgPreview.querySelectorAll('.neon-glow-active').forEach(el => {
+              el.classList.remove('neon-glow-active')
+            })
+
+            const targetEl = svgPreview.querySelector(err.selector)
+            if (targetEl) {
+              targetEl.classList.add('neon-glow-active')
+            }
+          })
+        }
+        errorList.appendChild(item)
+      })
+    }
+  }
+})

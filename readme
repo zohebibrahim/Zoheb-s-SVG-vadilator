@@ -1,0 +1,24 @@
+# SVG Validator - SCADA Inspectie Tool
+
+Dit project is een webgebaseerde SVG-validator die speciaal is ontworpen om te controleren of SVG-bestanden voldoen aan de strenge structuur- en opmaakeisen van SCADA-installatieschema's. De applicatie bestaat uit een Node.js/Express backend en een interactieve frontend.
+
+##  Hoe werkt de Validator?
+
+De applicatie controleert geüploade SVG-bestanden op zowel XML-structuur als klantspecifieke eisen (User Stories):
+1. **Hoofdtag Controle:** Het bestand moet een geldige `<svg>` tag bevatten met de verplichte klasse `installation`.
+2. **Verplichte Tags:** Direct onder de root moeten de tags `<style>`, `<defs>` en de hoofdgroep `<g>` aanwezig zijn.
+3. **CSS Validatie:** De validator parseert de CSS in de `<style>` tag en controleert of alle klassen die op de hoofdcomponenten worden gebruikt, ook daadwerkelijk in de stylesheet zijn gedefinieerd.
+4. **Symbool & Interactie Inspectie:** In de `<defs>` wordt gecontroleerd of elk `<symbol>` een subgroep `<g class="installation_section">` bevat én een interactief element met de klasse `click-area` (voorzien van een transparante vulling).
+5. **Foutrapportage:** Voldoet een bestand niet? Dan stuurt de backend een gedetailleerd JSON-rapport terug met `"valid": false` en een lijst met specifieke foutmeldingen inclusief regelnummers en CSS-selectors. Voldoet het bestand wel, dan geeft de server `"valid": true` terug.
+
+---
+
+## Installatie & Starten van de Applicatie
+
+Volg onderstaande stappen in de terminal van je code-editor (bijv. VS Code) om de applicatie lokaal te draaien.
+
+### 1. Packages downloaden
+Voordat de server gestart kan worden, moeten de benodigde afhankelijkheden (`express`, `multer`, `xmldom`, `css`) worden geïnstalleerd op basis van het `package.json` bestand. Run hiervoor het volgende commando in de terminal:
+
+```bash
+npm install
