@@ -16,3 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const errorList = document.getElementById('errorList')
   const statusBadge = document.getElementById('statusBadge')
   const componentTree = document.getElementById('componentTree')
+
+  // inloggegevens voor de test
+  const GELDIGE_GEBRUIKERSNAAM = 'zoheb'
+  const GELDIG_WACHTWOORD = 'zoheb'

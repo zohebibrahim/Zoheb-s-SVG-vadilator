@@ -110,7 +110,7 @@ body {
 .tree-leaf::before { content: "•"; position: absolute; left: 0; color: #475569; }
 .tree-attr { color: #fb923c; font-size: 0.8rem; }
 
-
+/* valdiatie rapport stijling*/
 .sidebar {
   width: 380px;
   background-color: var(--bg-panel);
@@ -118,3 +118,26 @@ body {
   display: flex;
   flex-direction: column;
 }
+
+.sidebar-header { padding: 1.5rem; border-bottom: 1px solid #2d3748; }
+.sidebar-header h2 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+.badge { display: inline-block; padding: 0.25rem 0.6rem; border-radius: 99px; font-size: 0.75rem; 
+    font-weight: 600; background-color: var(--bg-item);}
+
+    /* error stijling en effecten voor de valdiatie rapport */
+.error-list { flex: 1; overflow-y: auto; padding: 1rem 1.5rem; }
+.error-item {
+  background-color: var(--bg-item);
+  border-left: 4px solid var(--error);
+  padding: 1rem;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, 
+}   
+.error-item:hover { transform: translateX(-4px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+.error-item .message { font-size: 0.85rem; line-height: 1.4; }
+
+/* rode glow effect voor de svgs*/
+
+
