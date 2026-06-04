@@ -9,7 +9,7 @@ body {
   font-family: roboto, sans-serif;
   height: 100vh;
   overflow: hidden;
-  background-color: lightblue;
+  background-color: rgb(206, 207, 214);
 }
 
 /* app container en layout */
@@ -34,7 +34,7 @@ body {
 .drop-zone {
   flex: 2;
   min-height: 250px;
-  border: 2px dashed #334155;
+  border: 2px dashed #283547c4;
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -46,7 +46,7 @@ body {
 
 /* hover muis effecten voor de drop zone */
 .drop-zone:hover, .drop-zone.drag-over {
-  background-color: rgba(110, 16, 141, 0.673);
+  background-color: #88919c;
   box-shadow: 0 0 15px var(--accent-glow);
 }
 
@@ -55,3 +55,66 @@ body {
 .upload-icon { width: 40px; height: 40px; fill: var(--text-muted); margin-bottom: 0.75rem; }
 .drop-zone-prompt mark { background: none; color: var(--accent); font-weight: 600; }
 .file-input { position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+
+/* component tree container en styling */
+.svg-preview {
+  display: none;
+  width: 100%;
+  height: 100%;
+  padding: 1rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.svg-preview svg { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+/* component boom container en stijling */
+.tree-container {
+  flex: 1;
+  min-height: 180px;
+  background-color: var(--bg-panel);
+  border-radius: 12px;
+  border: 1px solid #2d3748;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+/* header van de component boom */
+.tree-container h3 {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* content van de component boom, monospace font voor code stijl, scrollbaar als het te lang is */
+.tree-content {
+  flex: 1;
+  overflow-y: auto;
+  font-family: monospace;
+  font-size: 0.85rem;
+  padding: 0.5rem;
+  background-color: rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+}
+
+/* placeholder tekst in de component boom voordat er een SVG is geüpload */
+.tree-placeholder { color: var(--text-muted); font-style: italic; }
+.tree-content details { margin-left: 1rem; }
+.tree-content summary { list-style: none; cursor: pointer; padding: 0.15rem 0; color: #38bdf8; display: flex; align-items: center; }
+.tree-content summary::before { content: "▸"; display: inline-block; width: 1rem; color: var(--text-muted); transition: transform 0.2s ease; }
+.tree-content details[open] > summary::before { transform: rotate(90deg); }
+.tree-leaf { margin-left: 1rem; padding: 0.15rem 0 0.15rem 1rem; color: #93c5fd; position: relative; }
+.tree-leaf::before { content: "•"; position: absolute; left: 0; color: #475569; }
+.tree-attr { color: #fb923c; font-size: 0.8rem; }
+
+
+.sidebar {
+  width: 380px;
+  background-color: var(--bg-panel);
+  border-left: 1px solid #2d3748;
+  display: flex;
+  flex-direction: column;
+}
