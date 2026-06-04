@@ -1,7 +1,46 @@
-:root{
-    --primary-color: #3498db;
-    --secondary-color: #2ecc71;
-    --background-color: #ecf0f1;
-    --text-color: #2c3e50;
-    
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
+
+/* algemene body stijl*/
+body {
+  font-family: roboto, sans-serif;
+  height: 100vh;
+  overflow: hidden;
+  background-color: lightblue;
+}
+
+/* app container en layout */
+.app-container {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+
+.viewer-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  overflow: hidden;
+  gap: 1rem;
+}
+
+/* drop zone waar stijling waar de files in worden gesleept, dashed voor de stippen border */
+.drop-zone {
+  flex: 2;
+  min-height: 250px;
+  border: 2px dashed #334155;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
