@@ -40,3 +40,60 @@ document.addEventListener('DOMContentLoaded', () => {
       loginError.textContent = 'Onjuiste gebruikersnaam of wachtwoord.'
     }
   })  
+
+  // drag & drop functionaliteit voor het uploaden van SVG bestanden, en ook een click event voor het selecteren van bestanden via de file input
+  ;['dragenter', 'dragover'].forEach(eventName => {
+    dropZone.addEventListener(eventName, (e) => {
+      e.preventDefault()
+      dropZone.classList.add('drag-over')
+    }, false)
+  })
+
+  ;['dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, (e) => {
+      e.preventDefault()
+      dropZone.classList.remove('drag-over')
+    }, false)
+  })
+  // event listener voor het droppen van bestanden in de dropzone
+  dropZone.addEventListener('drop', (e) => {
+    const dt = e.dataTransfer
+    const files = dt.files
+    if (files.length) handleFile(files[0])
+  })
+
+  fileInput.addEventListener('change', (e) => {
+    if (fileInput.files.length) handleFile(fileInput.files[0])
+  })
+// functie die word aangeroepen bij het uploaden van een bestand, als het geen svg bestand is krijg de gebruiker een alert
+  function handleFile (file) {
+    if (!file.name.endsWith('.svg')) {
+      alert('Alleen svg bestanden worden geaccepteerd.')
+      return
+    }
+
+    const formData = new FormData()
+    formData.append('svgfile', file)
+
+    // het schoon maken van de oude resultaten en het tonen van een niewe svg status
+    appContainer.className = 'app-container'
+    errorList.innerHTML = ''
+    componentTree.innerHTML = ''
+    statusBadge.textContent = 'Analyseren...'
+
+    // het sturen van een bestand naar de server voor validatie, en het verwerken van het antwoord van de server 
+    fetch('/api/validate', {
+      method: 'POST',
+      body: formData
+    })
+
+    // het verwerken van het antwoord van de server en het weergeven van de resultaten
+    .then(res => res.json())
+    .then(data => {
+      renderResult(data)
+    })
+    .catch(err => {
+      console.error(err)
+      statusBadge.textContent = 'Fout bij verbinden'
+    })
+  }
