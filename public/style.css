@@ -44,3 +44,14 @@ body {
   transition: all 0.3s ease;
 }
 
+/* hover muis effecten voor de drop zone */
+.drop-zone:hover, .drop-zone.drag-over {
+  background-color: rgba(110, 16, 141, 0.673);
+  box-shadow: 0 0 15px var(--accent-glow);
+}
+
+/* prompt binnen de drop zone om het netjes te alignen en voor de upload logo */
+.drop-zone-prompt { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); }
+.upload-icon { width: 40px; height: 40px; fill: var(--text-muted); margin-bottom: 0.75rem; }
+.drop-zone-prompt mark { background: none; color: var(--accent); font-weight: 600; }
+.file-input { position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
