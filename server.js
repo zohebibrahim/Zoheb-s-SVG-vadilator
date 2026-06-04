@@ -1,3 +1,5 @@
+// express server voor de SVG validator met een endpoint voor het uploaden en valideren van SVG bestanden
+
 const express = require('express')
 const multer = require('multer')
 const { DOMParser } = require('xmldom')
@@ -48,7 +50,7 @@ function validateSVG (svgString) {
   const definedSymbolIds = []
   const definedCssClasses = new Set()
 
-  // CSS Parser: Verzamel gedefinieerde klassen uit <style>
+  // Verzamel gedefinieerde klassen uit <style>
   if (styleNode) {
     try {
       const styleContent = styleNode.textContent || ''
@@ -70,7 +72,7 @@ function validateSVG (svgString) {
     }
   }
 
-  //defs en symbol validatie
+  // defs en symbol validatie
   if (defsNode) {
     const symbols = Array.from(defsNode.childNodes).filter(n => n.nodeType === 1 && n.tagName === 'symbol')
     
@@ -89,7 +91,7 @@ function validateSVG (svgString) {
         })
       }
 
-      //  bevat de transparante click-area ergens binnen het symbool
+      //  bevat de transparante click-area ergens binnen het symbool om de svg clickable te maken
       const allSymbolElements = Array.from(symbol.getElementsByTagName('*'))
       const hasClickArea = typeof allSymbolElements.find(el => 
         ['g', 'path', 'rect', 'circle'].includes(el.tagName) && 
@@ -113,7 +115,7 @@ function validateSVG (svgString) {
     mainGChildren.forEach((child, index) => {
       const selector = `svg > g > :nth-child(${index + 1})`
       
-      // Toegestane tags controleren direct onder de hoofd-g
+      // toegestaande tags controleren direct onder de hoofd-g
       if (!['use', 'text', 'g'].includes(child.tagName)) {
         errors.push({ message: `Tag '${child.tagName}' is niet toegestaan direct onder de hoofdgroep <g>. Verpak deze eventueel in een subgroep <g class="click-area">.${getLine(child)}`, selector })
         return

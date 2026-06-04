@@ -7,9 +7,13 @@
 /* algemene body stijl*/
 body {
   font-family: roboto, sans-serif;
+  background-color: #2c2c2c;
   height: 100vh;
   overflow: hidden;
-  background-color: rgb(206, 207, 214);
+  color: white;
+}
+.accent {
+  color: #6366f1;
 }
 
 /* app container en layout */
@@ -32,6 +36,7 @@ body {
 
 /* drop zone waar stijling waar de files in worden gesleept, dashed voor de stippen border */
 .drop-zone {
+  background-color: #494848;
   flex: 2;
   min-height: 250px;
   border: 2px dashed #283547c4;
@@ -137,6 +142,22 @@ body {
 }   
 .error-item:hover { transform: translateX(-4px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
 .error-item .message { font-size: 0.85rem; line-height: 1.4; }
+
+/* de hoofd kleuren voor het thema in het gehele css, en ook makkelijker aan te passen */
+:root {
+  --bg-dark: #272727;
+  --bg-panel: #494848;
+  --bg-item: #24242a;
+  --text-main: #e2e8f0;
+  --text-muted: #94a3b8;
+  --accent: #6366f1;
+  --accent-glow: rgba(99, 102, 241, 0.25);
+  --success: #10b981;
+  --success-glow: rgba(16, 185, 129, 0.2);
+  --error: #f43f5e;
+  --error-glow: rgba(244, 63, 94, 0.3);
+  --neon-red: #ff3366;
+}
 
 /* rode glow effect voor de svgs*/
 
