@@ -1,49 +1,54 @@
 <!DOCTYPE html>
 <html lang="nl">
-<head>
-    <meta charset="UTF-8">
-    <title>Svg testl</title>
-
+<head> 
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zoheb's SVG Validator</title>
+  <link rel="stylesheet" href="style.css">
+    <script src="app.js"></script>
 </head>
 <body>
-    <h2>Upload test</h2>
+ 
+  <div class="login-overlay" id="loginPage">
+    <div class="login-card">
+      <header class="login-header">
+        <h2>Zoheb's SVG <span class="accent">Validator</span></h2>
+        <p class="sub-credit">made by zoheb "exam"</p>
+      </header>
+      
+      <form id="loginForm">
+        <div class="input-group">
+          <label for="username">Gebruikersnaam</label>
+          <input type="text" id="username" required placeholder="Gebruikersnaam...">
+        </div>
+        <div class="input-group">
+          <label for="password">Wachtwoord</label>
+          <input type="password" id="password" required placeholder="Wachtwoord...">
+        </div>
+        <div id="loginError" class="login-error-msg"></div>
+        <button type="submit" class="login-btn">Inloggen</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="app-container app-hidden" id="app">
     
-    <form id="uploadForm">
-        <input type="file" name="svgfile" accept=".svg" required>
-        <button type="submit">upload</button>
-    </form>
+    <main class="viewer-section">
+      <header class="app-header">
+        <h1>Zoheb's SVG <span class="accent">Validator</span></h1>
+        <p class="sub-credit">made by zoheb "exam"</p>
+      </header>
 
-    <h3>Resultaat</h3>
-    <pre id="output">Nog geen bestand verzonden</pre>
+             
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-zone-prompt">
+              <span>Sleep SVG hier in<mark>klik om te zoeken</mark></span>
+        </div>
+        <input type="file" id="fileInput" accept=".svg" class="file-input">
+        <div id="svgPreview" class="svg-preview"></div>
+      </div>
 
-    <script>
-        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const output = document.getElementById('output');
-            output.innerText = "Bezig met valideren...";
 
-            const formData = new FormData(e.target);
 
-            try {
-               // Stuur het bestand naar de server voor validatie
-                const response = await fetch('http://localhost:3000/api/validate', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-                output.innerHTML = JSON.stringify(data, null, 2);
-                
-                if (data.valid) {
-                    output.innerHTML += '<br><br><span class="success">✓ Server zegt: SVG is GELDIG!</span>';
-                } else {
-                    output.innerHTML += '<br><br><span class="error">✗ Server zegt: SVG is ONGELDIG!</span>';
-                }
-            } catch (err) {
-                output.className = 'error';
-                output.innerText = "Fout bij verbinden met de server: " + err.message;
-            }
-        });
-    </script>
 </body>
 </html>
