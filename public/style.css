@@ -34,6 +34,75 @@ body {
   gap: 1rem;
 }
 
+.login-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--bg-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.login-card {
+  background-color: var(--bg-panel);
+  border: 1px solid #2d3748;
+  padding: 2.5rem;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  text-align: center;
+}
+
+/* login card header en styling */
+.login-card form { margin-top: 2rem; }
+.input-group { text-align: left; margin-bottom: 1.25rem; }
+.input-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+
+.input-group input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: var(--bg-dark);
+  border: 1px solid #2d3748;
+  border-radius: 8px;
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.login-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-btn:hover {
+  background-color: #5254e3;
+  box-shadow: 0 0 15px var(--accent-glow);
+}
+
+.login-error-msg { color: var(--error); font-size: 0.85rem; margin-top: 0.5rem; min-height: 1.2rem; text-align: left; }
+
 /* drop zone waar stijling waar de files in worden gesleept, dashed voor de stippen border */
 .drop-zone {
   background-color: #494848;
@@ -129,6 +198,23 @@ body {
 .sidebar-header h2 { font-size: 1.1rem; margin-bottom: 0.5rem; }
 .badge { display: inline-block; padding: 0.25rem 0.6rem; border-radius: 99px; font-size: 0.75rem; 
     font-weight: 600;}
+
+}
+.error-item:hover { transform: translateX(-4px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+.error-item .message { font-size: 0.85rem; line-height: 1.4; }
+
+/* Glow States */
+.state-success .drop-zone { border-color: var(--success); box-shadow: 0 0 15px var(--success-glow); }
+.state-success #statusBadge { background-color: rgba(16, 185, 129, 0.1); color: var(--success); }
+.state-failed .drop-zone { border-color: #3f2229; }
+.state-failed #statusBadge { background-color: rgba(244, 63, 94, 0.1); color: var(--error); }
+
+.neon-glow-active {
+  stroke: var(--neon-red) !important;
+  stroke-width: 3px !important;
+  filter: drop-shadow(0 0 8px var(--neon-red)) !important;
+  transition: all 0.2s ease-in-out;
+}
 
     /* error stijling en effecten voor de valdiatie rapport */
 .error-list { flex: 1; overflow-y: auto; padding: 1rem 1.5rem; }
