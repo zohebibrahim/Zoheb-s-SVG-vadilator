@@ -1,5 +1,3 @@
-// express server voor de SVG validator met een endpoint voor het uploaden en valideren van SVG bestanden
-
 const express = require('express')
 const multer = require('multer')
 const { DOMParser } = require('xmldom')
@@ -18,7 +16,7 @@ function validateSVG (svgString) {
   const errors = []
   const parser = new DOMParser({
     errorHandler: {
-      error: () => {}, // Negeer milde XML waarschuwingen
+      error: () => {},
       fatalError: (msg) => errors.push({ message: `XML Structuur Fout: ${msg}` })
     }
   })
@@ -28,17 +26,16 @@ function validateSVG (svgString) {
 
   const root = doc.documentElement
   
-
   if (!root || root.tagName !== 'svg') {
     errors.push({ message: 'Het bestand is geen geldige SVG (hoofdtag mist).', selector: 'svg' })
     return { valid: false, errors }
   }
 
-//Klasse "installation" aanwezigheid
   if (root.getAttribute('class') !== 'installation') {
     errors.push({ message: `De hoofd <svg> tag mist de verplichte klasse "installation".${getLine(root)}`, selector: 'svg' })
   }
- const rootChildren = Array.from(root.childNodes).filter(n => n.nodeType === 1)
+  
+  const rootChildren = Array.from(root.childNodes).filter(n => n.nodeType === 1)
   const styleNode = rootChildren.find(n => n.tagName === 'style')
   const defsNode = rootChildren.find(n => n.tagName === 'defs')
   const mainGNode = rootChildren.find(n => n.tagName === 'g' && n.getAttribute('class') !== 'click-area')
@@ -50,7 +47,6 @@ function validateSVG (svgString) {
   const definedSymbolIds = []
   const definedCssClasses = new Set()
 
-  // Verzamel gedefinieerde klassen uit <style>
   if (styleNode) {
     try {
       const styleContent = styleNode.textContent || ''
@@ -72,7 +68,6 @@ function validateSVG (svgString) {
     }
   }
 
-  // defs en symbol validatie
   if (defsNode) {
     const symbols = Array.from(defsNode.childNodes).filter(n => n.nodeType === 1 && n.tagName === 'symbol')
     
@@ -81,8 +76,6 @@ function validateSVG (svgString) {
       if (id) definedSymbolIds.push(id)
 
       const symbolChildren = Array.from(symbol.childNodes).filter(n => n.nodeType === 1)
-      
-      //  bevat <g class="installation_section">
       const hasInstSection = symbolChildren.some(n => n.tagName === 'g' && n.getAttribute('class') === 'installation_section')
       if (!hasInstSection) {
         errors.push({ 
@@ -91,7 +84,6 @@ function validateSVG (svgString) {
         })
       }
 
-      //  bevat de transparante click-area ergens binnen het symbool om de svg clickable te maken
       const allSymbolElements = Array.from(symbol.getElementsByTagName('*'))
       const hasClickArea = typeof allSymbolElements.find(el => 
         ['g', 'path', 'rect', 'circle'].includes(el.tagName) && 
@@ -108,20 +100,17 @@ function validateSVG (svgString) {
     })
   }
 
-  // hoofd g validatie
   if (mainGNode) {
     const mainGChildren = Array.from(mainGNode.childNodes).filter(n => n.nodeType === 1)
     
     mainGChildren.forEach((child, index) => {
       const selector = `svg > g > :nth-child(${index + 1})`
       
-      // toegestaande tags controleren direct onder de hoofd-g
       if (!['use', 'text', 'g'].includes(child.tagName)) {
         errors.push({ message: `Tag '${child.tagName}' is niet toegestaan direct onder de hoofdgroep <g>. Verpak deze eventueel in een subgroep <g class="click-area">.${getLine(child)}`, selector })
         return
       }
 
-      // <use> tag checks
       if (child.tagName === 'use') {
         const href = child.getAttribute('xlink:href') || child.getAttribute('href') || ''
         const targetId = href.replace('#', '')
@@ -132,7 +121,6 @@ function validateSVG (svgString) {
         }
       }
 
-      // <text> tag checks
       if (child.tagName === 'text') {
         if (!child.getAttribute('style')) {
           errors.push({ message: `<text> tag mist een 'style' attribuut.${getLine(child)}`, selector })
@@ -143,14 +131,12 @@ function validateSVG (svgString) {
         }
       }
 
-      // Sub-g checks
       if (child.tagName === 'g') {
         if (child.getAttribute('class') !== 'click-area') {
           errors.push({ message: `Sub-groep <g> onder de hoofdgroep moet de klasse "click-area" bevatten.${getLine(child)}`, selector })
         }
       }
 
-      // checkt of gebruikte klassen op de hoofdcomponenten in de <style> staan
       const classes = Array.from(child.classList || [])
       classes.forEach(className => {
         if (!definedCssClasses.has(className) && className !== 'click-area' && className !== 'installation_section') {
@@ -176,4 +162,4 @@ app.post('/api/validate', upload.single('svgfile'), (req, res) => {
 })
 
 const PORT = 3000
-app.listen(PORT, () => console.log(`Server draait op http://localhost:${PORT}`)) 
+app.listen(PORT, () => console.log(`Server draait op http://localhost:${PORT}`))

@@ -4,7 +4,6 @@
   padding: 0;
 }
 
-/* algemene body stijl*/
 body {
   font-family: roboto, sans-serif;
   background-color: #2c2c2c;
@@ -16,7 +15,6 @@ body {
   color: #6366f1;
 }
 
-/* app container en layout */
 .app-container {
   display: flex;
   width: 100vw;
@@ -59,7 +57,6 @@ body {
   text-align: center;
 }
 
-/* login card header en styling */
 .login-card form { margin-top: 2rem; }
 .input-group { text-align: left; margin-bottom: 1.25rem; }
 .input-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
@@ -103,7 +100,6 @@ body {
 
 .login-error-msg { color: var(--error); font-size: 0.85rem; margin-top: 0.5rem; min-height: 1.2rem; text-align: left; }
 
-/* drop zone waar stijling waar de files in worden gesleept, dashed voor de stippen border */
 .drop-zone {
   background-color: #494848;
   flex: 2;
@@ -118,19 +114,16 @@ body {
   transition: all 0.3s ease;
 }
 
-/* hover muis effecten voor de drop zone */
 .drop-zone:hover, .drop-zone.drag-over {
   background-color: #88919c;
   box-shadow: 0 0 15px var(--accent-glow);
 }
 
-/* prompt binnen de drop zone om het netjes te alignen en voor de upload logo */
 .drop-zone-prompt { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); }
 .upload-icon { width: 40px; height: 40px; fill: var(--text-muted); margin-bottom: 0.75rem; }
 .drop-zone-prompt mark { background: none; color: var(--accent); font-weight: 600; }
 .file-input { position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
 
-/* component tree container en styling */
 .svg-preview {
   display: none;
   width: 100%;
@@ -138,11 +131,79 @@ body {
   padding: 1rem;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
 }
 
-.svg-preview svg { max-width: 100%; max-height: 100%; object-fit: contain; }
+.svg-preview.grabbing {
+  cursor: grabbing;
+}
 
-/* component boom container en stijling */
+.svg-preview svg { 
+  max-width: 100%; 
+  max-height: 100%; 
+  object-fit: contain;
+  will-change: transform;
+}
+
+.drop-zone.has-svg .file-input {
+  display: none;
+}
+
+.drop-zone.has-svg {
+  cursor: default;
+}
+
+/* STYLING VOOR DE ZOOM EN REFRESH CONTROLS */
+.zoom-controls {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  z-index: 100;
+}
+
+.zoom-button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.zoom-controls button {
+  width: 38px;
+  height: 38px;
+  background-color: #272727;
+  border: 1px solid #4a5568;
+  color: white;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  transition: all 0.2s ease;
+}
+
+.zoom-controls button:hover {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  transform: scale(1.05);
+}
+
+.zoom-controls button.refresh-btn:hover {
+  background-color: var(--error);
+  border-color: var(--error);
+}
+
+.zoom-controls button:active {
+  transform: scale(0.95);
+}
+
 .tree-container {
   flex: 1;
   min-height: 180px;
@@ -154,8 +215,6 @@ body {
   flex-direction: column;
 }
 
-
-/* header van de component boom */
 .tree-container h3 {
   font-size: 0.9rem;
   color: var(--text-muted);
@@ -164,7 +223,6 @@ body {
   letter-spacing: 0.05em;
 }
 
-/* content van de component boom, monospace font voor code stijl, scrollbaar als het te lang is */
 .tree-content {
   flex: 1;
   overflow-y: auto;
@@ -175,7 +233,6 @@ body {
   border-radius: 6px;
 }
 
-/* placeholder tekst in de component boom voordat er een SVG is geüpload */
 .tree-placeholder { color: var(--text-muted); font-style: italic; }
 .tree-content details { margin-left: 1rem; }
 .tree-content summary { list-style: none; cursor: pointer; padding: 0.15rem 0; color: #38bdf8; display: flex; align-items: center; }
@@ -185,7 +242,6 @@ body {
 .tree-leaf::before { content: "•"; position: absolute; left: 0; color: #475569; }
 .tree-attr { color: #fb923c; font-size: 0.8rem; }
 
-/* valdiatie rapport stijling*/
 .sidebar {
   width: 380px;
   background-color: var(--bg-panel);
@@ -196,14 +252,8 @@ body {
 
 .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #2d3748; }
 .sidebar-header h2 { font-size: 1.1rem; margin-bottom: 0.5rem; }
-.badge { display: inline-block; padding: 0.25rem 0.6rem; border-radius: 99px; font-size: 0.75rem; 
-    font-weight: 600;}
+.badge { display: inline-block; padding: 0.25rem 0.6rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600;}
 
-}
-.error-item:hover { transform: translateX(-4px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-.error-item .message { font-size: 0.85rem; line-height: 1.4; }
-
-/* Glow States */
 .state-success .drop-zone { border-color: var(--success); box-shadow: 0 0 15px var(--success-glow); }
 .state-success #statusBadge { background-color: rgba(16, 185, 129, 0.1); color: var(--success); }
 .state-failed .drop-zone { border-color: #3f2229; }
@@ -213,10 +263,8 @@ body {
   stroke: var(--neon-red) !important;
   stroke-width: 3px !important;
   filter: drop-shadow(0 0 8px var(--neon-red)) !important;
-  transition: all 0.2s ease-in-out;
 }
 
-    /* error stijling en effecten voor de valdiatie rapport */
 .error-list { flex: 1; overflow-y: auto; padding: 1rem 1.5rem; }
 .error-item {
   background-color: var(--bg-item);
@@ -225,12 +273,11 @@ body {
   border-radius: 6px;
   margin-bottom: 0.75rem;
   cursor: pointer;
-  transition: transform 0.2s ease, 
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }   
 .error-item:hover { transform: translateX(-4px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
 .error-item .message { font-size: 0.85rem; line-height: 1.4; }
 
-/* de hoofd kleuren voor het thema in het gehele css, en ook makkelijker aan te passen */ 
 :root {
   --bg-dark: #272727;
   --bg-panel: #494848;
@@ -245,7 +292,3 @@ body {
   --error-glow: rgba(244, 63, 94, 0.3);
   --neon-red: #ff3366;
 }
-
-
-  
-    

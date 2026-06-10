@@ -76,11 +76,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const formData = new FormData()
     formData.append('svgfile', file)
 
-    // het schoon maken van de oude resultaten en het tonen van een nieuwe svg status
+    // Het schoon maken van de oude resultaten en het tonen van een nieuwe svg status
     appContainer.className = 'app-container'
+    dropZone.classList.remove('has-svg') // Reset klik-blokkade bij nieuwe upload
     errorList.innerHTML = ''
     componentTree.innerHTML = ''
     statusBadge.textContent = 'Analyseren...'
+
+    // Verwijder eventuele oude zoom knoppen als die er nog stonden
+    const oldControls = dropZone.querySelector('.zoom-controls')
+    if (oldControls) oldControls.remove()
 
     // het sturen van een bestand naar de server voor validatie
     fetch('/api/validate', {
@@ -143,6 +148,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (svgElement) {
       buildTree(svgElement, componentTree)
       componentCount = svgElement.querySelectorAll('*').length + 1
+      
+      // Maak en activeer de zoom & sleep functionaliteit + knoppen
+      initSvgZoom(svgElement)
+      
+      // Blokkeer het onzichtbare upload-veld zodat je niet per ongeluk opnieuw uploadt bij klikken
+      dropZone.classList.add('has-svg')
     }
 
     if (data.valid) {
@@ -164,7 +175,8 @@ document.addEventListener('DOMContentLoaded', () => {
         item.appendChild(msgEl)
 
         if (err.selector) {
-          item.addEventListener('click', () => {
+          item.addEventListener('click', (e) => {
+            e.stopPropagation()
             svgPreview.querySelectorAll('.neon-glow-active').forEach(el => {
               el.classList.remove('neon-glow-active')
             })
@@ -177,6 +189,150 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         errorList.appendChild(item)
       })
+    }
+  }
+
+  // Geavanceerde Zoom & Pan (Slepen) functionaliteit + Slimme reset zonder uitloggen
+  function initSvgZoom(svgElement) {
+    let scale = 1
+    let translateX = 0
+    let translateY = 0
+    
+    // Statusvariabelen voor het slepen
+    let isDragging = false
+    let startX = 0
+    let startY = 0
+
+    const MIN_SCALE = 0.4
+    const MAX_SCALE = 6
+    const ZOOM_SPEED = 0.12
+
+    // Maak de HTML knoppen dynamisch aan en voeg ze toe aan de dropzone container
+    const controls = document.createElement('div')
+    controls.className = 'zoom-controls'
+    controls.innerHTML = `
+      <button id="newSvgBtn" class="refresh-btn" title="Laat nieuwe SVG">🗑</button>
+      <div class="zoom-button-group">
+        <button id="zoomInBtn" title="Inzoomen">+</button>
+        <button id="zoomOutBtn" title="Uitzoomen">−</button>
+        <button id="zoomResetBtn" title="Reset Zoom">↺</button>
+      </div>
+    `
+    dropZone.appendChild(controls)
+
+    // Zet het middelpunt vast
+    svgElement.style.transformOrigin = 'center center'
+    updateTransform()
+
+    // Update functie die zowel zoom (scale) als verschuiving (translate) toepast
+    function updateTransform() {
+      svgElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`
+    }
+
+    // Muiswiel Zoom
+    svgPreview.addEventListener('wheel', (e) => {
+      e.preventDefault()
+
+      const rect = svgPreview.getBoundingClientRect()
+      const mouseX = e.clientX - rect.left
+      const mouseY = e.clientY - rect.top
+
+      const svgX = (mouseX - rect.width / 2 - translateX) / scale
+      const svgY = (mouseY - rect.height / 2 - translateY) / scale
+
+      const oldScale = scale
+      if (e.deltaY < 0) {
+        scale += ZOOM_SPEED
+      } else {
+        scale -= ZOOM_SPEED
+      }
+      scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale))
+
+      translateX += svgX * (oldScale - scale)
+      translateY += svgY * (oldScale - scale)
+
+      updateTransform()
+    }, { passive: false })
+
+    // Sleep en beweeg functionaliteit (Pan)
+    svgPreview.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return 
+      
+      isDragging = true
+      svgPreview.classList.add('grabbing')
+      
+      startX = e.clientX - translateX
+      startY = e.clientY - translateY
+    })
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return
+      translateX = e.clientX - startX
+      translateY = e.clientY - startY
+      updateTransform()
+    })
+
+    window.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false
+        svgPreview.classList.remove('grabbing')
+      }
+    })
+
+    // Knoppen functionaliteit
+    document.getElementById('zoomInBtn').addEventListener('click', (e) => {
+      e.stopPropagation()
+      scale = Math.min(MAX_SCALE, scale + 0.3)
+      updateTransform()
+    })
+
+    document.getElementById('zoomOutBtn').addEventListener('click', (e) => {
+      e.stopPropagation()
+      scale = Math.max(MIN_SCALE, scale - 0.3)
+      updateTransform()
+    })
+
+    document.getElementById('zoomResetBtn').addEventListener('click', (e) => {
+      e.stopPropagation()
+      resetZoom()
+    })
+
+    // --- FIX: RESET APP ZONDER REFRESH (GEEN RE-LOGIN NODIG) ---
+    document.getElementById('newSvgBtn').addEventListener('click', (e) => {
+      e.stopPropagation()
+      
+      // 1. Maak de preview leeg en verberg deze weer
+      svgPreview.innerHTML = ''
+      svgPreview.style.display = 'none'
+      
+      // 2. Toon de originele upload-tekst (prompt) weer
+      prompt.style.display = 'flex'
+      
+      // 3. Reset het uploadveld en geef de dropzone zijn klik-functie terug
+      fileInput.value = ''
+      dropZone.classList.remove('has-svg')
+      
+      // 4. Maak de componentenboom en de foutenlijst leeg
+      componentTree.innerHTML = '<span class="tree-placeholder">Upload een SVG om de componenten boom te bekijken...</span>'
+      errorList.innerHTML = ''
+      
+      // 5. Reset status badges en app-achtergrondkleuren naar de beginstand
+      statusBadge.textContent = 'Wachten op SVG bestand...'
+      appContainer.className = 'app-container'
+      
+      // 6. Verwijder tot slot de knoppen-interface tot er een nieuwe SVG komt
+      controls.remove()
+    })
+
+    svgPreview.addEventListener('dblclick', () => {
+      resetZoom()
+    })
+
+    function resetZoom() {
+      scale = 1
+      translateX = 0
+      translateY = 0
+      updateTransform()
     }
   }
 })
