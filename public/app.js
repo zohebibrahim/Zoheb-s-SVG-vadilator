@@ -78,12 +78,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Het schoon maken van de oude resultaten en het tonen van een nieuwe svg status
     appContainer.className = 'app-container'
-    dropZone.classList.remove('has-svg') // Reset klik-blokkade bij nieuwe upload
+    dropZone.classList.remove('has-svg')
     errorList.innerHTML = ''
     componentTree.innerHTML = ''
     statusBadge.textContent = 'Analyseren...'
 
-    // Verwijder eventuele oude zoom knoppen als die er nog stonden
     const oldControls = dropZone.querySelector('.zoom-controls')
     if (oldControls) oldControls.remove()
 
@@ -102,8 +101,8 @@ document.addEventListener('DOMContentLoaded', () => {
     })
   }
 
-  // functie die de XML boomstructuur opbouwt van de svg elementen
-  function buildTree (xmlNode, container) {
+  // GEOPTIMALISEERDE FUNCTIE: Matcht nu exact met de selectors van server.js
+  function buildTree (xmlNode, container, currentSelector = "svg", elementIndex = 1) {
     if (xmlNode.nodeType !== 1) return
 
     const children = Array.from(xmlNode.childNodes).filter(n => n.nodeType === 1)
@@ -118,25 +117,51 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     nodeText += `&gt;`
 
+    let wrapper;
+
     if (hasChildren) {
       const detailsEl = document.createElement('details')
-      detailsEl.open = true 
+      detailsEl.open = false 
 
       const summaryEl = document.createElement('summary')
       summaryEl.innerHTML = nodeText
       detailsEl.appendChild(summaryEl)
 
       container.appendChild(detailsEl)
-      children.forEach(child => buildTree(child, detailsEl))
+      wrapper = detailsEl;
+
+      // Zoek de directe hoofdgroepen (style, defs, g) op zoals de server dat doet
+      let mainGNode = children.find(n => n.tagName === 'g' && n.getAttribute('class') !== 'click-area');
+
+      children.forEach((child, index) => {
+        let nextSelector = "";
+
+        if (xmlNode.tagName === 'svg') {
+          // Directe kinderen van SVG (zoals style, defs, of de hoofd-g)
+          nextSelector = `svg > ${child.tagName}`;
+        } else if (xmlNode === mainGNode || (xmlNode.tagName === 'g' && xmlNode.parentElement.tagName === 'svg' && xmlNode.getAttribute('class') !== 'click-area')) {
+          // Elementen die direct onder de hoofdgroep <g> vallen gebruiken :nth-child in de server
+          nextSelector = `svg > g > :nth-child(${index + 1})`;
+        } else {
+          // Dieper liggende sub-elementen
+          nextSelector = `${currentSelector} > :nth-child(${index + 1})`;
+        }
+
+        buildTree(child, detailsEl, nextSelector, index + 1)
+      })
     } else {
       const leafDiv = document.createElement('div')
       leafDiv.className = 'tree-leaf'
       leafDiv.innerHTML = nodeText
       container.appendChild(leafDiv)
+      wrapper = leafDiv;
     }
+
+    // Sla de berekende selector op in het HTML-element
+    wrapper.setAttribute('data-selector', currentSelector);
   }
 
-  // Resultaten weergeven en koppelen aan de interactieve sidebar
+  // Resultaten weergeven en koppelen aan de interactieve sidebar + component tree
   function renderResult (data) {
     prompt.style.display = 'none'
     svgPreview.style.display = 'flex'
@@ -148,11 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (svgElement) {
       buildTree(svgElement, componentTree)
       componentCount = svgElement.querySelectorAll('*').length + 1
-      
-      // Maak en activeer de zoom & sleep functionaliteit + knoppen
       initSvgZoom(svgElement)
-      
-      // Blokkeer het onzichtbare upload-veld zodat je niet per ongeluk opnieuw uploadt bij klikken
       dropZone.classList.add('has-svg')
     }
 
@@ -165,25 +186,56 @@ document.addEventListener('DOMContentLoaded', () => {
       statusBadge.textContent = `${data.errors.length} Fout(en) | ${componentCount} Componenten`
 
       data.errors.forEach(err => {
-        // HIER IS DE FIX VAN JE BAAS TOEGEPAST:
         const item = document.createElement('div')
         item.className = 'error-item'
         
         const msgEl = document.createElement('div')
         msgEl.className = 'message'
-        msgEl.textContent = err.message // Veilig als platte tekst injecteren
+        msgEl.textContent = err.message
         item.appendChild(msgEl)
 
         if (err.selector) {
           item.addEventListener('click', (e) => {
             e.stopPropagation()
+            
+            // 1. Reset eerdere actieve rode gloeden in de SVG
             svgPreview.querySelectorAll('.neon-glow-active').forEach(el => {
               el.classList.remove('neon-glow-active')
             })
 
+            // 2. Reset eerdere rode tekstkleuren in de Component Tree
+            componentTree.querySelectorAll('.tree-error-active').forEach(el => {
+              el.classList.remove('tree-error-active')
+            })
+
+            // 3. Zet de rode gloed aan op de SVG
             const targetEl = svgPreview.querySelector(err.selector)
             if (targetEl) {
               targetEl.classList.add('neon-glow-active')
+            }
+
+            // 4. SLIMME SELECTOR LOOKUP: Zoekt de exacte match óf de fallback (zoals een defs/style tag)
+            let treeTarget = componentTree.querySelector(`[data-selector="${err.selector}"]`);
+            
+            // Fallback: Als de server een complexe 'use[href="..."]' selector stuurt, zoeken we naar het symbool in defs
+            if (!treeTarget && err.selector.includes('use[')) {
+              treeTarget = componentTree.querySelector(`[data-selector="svg > defs"]`);
+            }
+
+            if (treeTarget) {
+              treeTarget.classList.add('tree-error-active')
+              
+              // Klap automatisch alle mappen naar boven toe open
+              let parent = treeTarget.parentElement
+              while (parent && parent !== componentTree) {
+                if (parent.tagName === 'DETAILS') {
+                  parent.open = true
+                }
+                parent = parent.parentElement
+              }
+              
+              // Scroll de boomstructuur soepel naar de fout toe
+              treeTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
             }
           })
         }
@@ -192,13 +244,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Geavanceerde Zoom & Pan (Slepen) functionaliteit + Slimme reset zonder uitloggen
+  // Geavanceerde Zoom & Pan (Slepen) functionaliteit
   function initSvgZoom(svgElement) {
     let scale = 1
     let translateX = 0
     let translateY = 0
     
-    // Statusvariabelen voor het slepen
     let isDragging = false
     let startX = 0
     let startY = 0
@@ -207,7 +258,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const MAX_SCALE = 6
     const ZOOM_SPEED = 0.12
 
-    // Maak de HTML knoppen dynamisch aan en voeg ze toe aan de dropzone container
     const controls = document.createElement('div')
     controls.className = 'zoom-controls'
     controls.innerHTML = `
@@ -220,16 +270,13 @@ document.addEventListener('DOMContentLoaded', () => {
     `
     dropZone.appendChild(controls)
 
-    // Zet het middelpunt vast
     svgElement.style.transformOrigin = 'center center'
     updateTransform()
 
-    // Update functie die zowel zoom (scale) als verschuiving (translate) toepast
     function updateTransform() {
       svgElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`
     }
 
-    // Muiswiel Zoom
     svgPreview.addEventListener('wheel', (e) => {
       e.preventDefault()
 
@@ -254,7 +301,6 @@ document.addEventListener('DOMContentLoaded', () => {
       updateTransform()
     }, { passive: false })
 
-    // Sleep en beweeg functionaliteit (Pan)
     svgPreview.addEventListener('mousedown', (e) => {
       if (e.button !== 0) return 
       
@@ -279,7 +325,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     })
 
-    // Knoppen functionaliteit
     document.getElementById('zoomInBtn').addEventListener('click', (e) => {
       e.stopPropagation()
       scale = Math.min(MAX_SCALE, scale + 0.3)
@@ -297,30 +342,18 @@ document.addEventListener('DOMContentLoaded', () => {
       resetZoom()
     })
 
-    // --- FIX: RESET APP ZONDER REFRESH (GEEN RE-LOGIN NODIG) ---
     document.getElementById('newSvgBtn').addEventListener('click', (e) => {
       e.stopPropagation()
       
-      // 1. Maak de preview leeg en verberg deze weer
       svgPreview.innerHTML = ''
       svgPreview.style.display = 'none'
-      
-      // 2. Toon de originele upload-tekst (prompt) weer
       prompt.style.display = 'flex'
-      
-      // 3. Reset het uploadveld en geef de dropzone zijn klik-functie terug
       fileInput.value = ''
       dropZone.classList.remove('has-svg')
-      
-      // 4. Maak de componentenboom en de foutenlijst leeg
       componentTree.innerHTML = '<span class="tree-placeholder">Upload een SVG om de componenten boom te bekijken...</span>'
       errorList.innerHTML = ''
-      
-      // 5. Reset status badges en app-achtergrondkleuren naar de beginstand
       statusBadge.textContent = 'Wachten op SVG bestand...'
       appContainer.className = 'app-container'
-      
-      // 6. Verwijder tot slot de knoppen-interface tot er een nieuwe SVG komt
       controls.remove()
     })
 

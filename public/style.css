@@ -278,6 +278,15 @@ body {
 .error-item:hover { transform: translateX(-4px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
 .error-item .message { font-size: 0.85rem; line-height: 1.4; }
 
+/* Zorgt ervoor dat het geselecteerde foute element in de boomstructuur rood kleurt */
+.tree-error-active > summary, 
+.tree-error-active.tree-leaf {
+  color: var(--error) !important;
+  font-weight: bold;
+  background-color: rgba(244, 63, 94, 0.15);
+  border-radius: 4px;
+  padding-left: 4px;
+}
 :root {
   --bg-dark: #272727;
   --bg-panel: #494848;
