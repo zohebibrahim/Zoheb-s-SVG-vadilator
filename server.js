@@ -161,5 +161,6 @@ app.post('/api/validate', upload.single('svgfile'), (req, res) => {
   res.json({ ...result, svgRaw: svgString })
 })
 
+// server runt op localhost 3000
 const PORT = 3000
 app.listen(PORT, () => console.log(`Server draait op http://localhost:${PORT}`))
